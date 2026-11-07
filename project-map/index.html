@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>项目地图 · REPOSITORY ATLAS</title>
+<style>
+  :root[data-theme="light"]{
+    --bg:#f7f9fc; --panel:#ffffff; --panel2:#f3f7fc;
+    --text:#1b2536; --muted:#5d6b81; --dim:#98a4b6;
+    --line:#e9eef5; --line2:#f1f4f9;
+    --cyan:#0c8ea8; --violet:#6c63e0; --lime:#0e9d78; --warn:#d1842a;
+    --cyan-t:rgba(12,142,168,.10); --violet-t:rgba(108,99,224,.10);
+    --lime-t:rgba(14,157,120,.11); --warn-t:rgba(209,132,42,.12);
+    --neutral-t:rgba(93,107,129,.075);
+    --glow:rgba(64,145,195,.13); --grid:rgba(48,95,150,.032);
+    --shadow:0 1px 2px rgba(26,48,84,.03),0 8px 24px rgba(26,48,84,.045);
+    --shadow-lg:0 2px 10px rgba(26,48,84,.06),0 26px 64px rgba(26,48,84,.14);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a101b; --panel:#111a29; --panel2:#162236;
+    --text:#e9f0fa; --muted:#93a3bc; --dim:#5d6e8a;
+    --line:#1f2c41; --line2:#192538;
+    --cyan:#4bbcd2; --violet:#a79cf3; --lime:#4ccfa4; --warn:#eab170;
+    --cyan-t:rgba(75,188,210,.15); --violet-t:rgba(167,156,243,.15);
+    --lime-t:rgba(76,207,164,.15); --warn-t:rgba(234,177,112,.15);
+    --neutral-t:rgba(147,163,188,.10);
+    --glow:rgba(70,170,215,.14); --grid:rgba(120,180,230,.045);
+    --shadow:0 1px 2px rgba(0,0,0,.20),0 8px 24px rgba(0,0,0,.28);
+    --shadow-lg:0 2px 10px rgba(0,0,0,.30),0 26px 64px rgba(0,0,0,.50);
+  }
+  *{box-sizing:border-box}
+  html,body{min-height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-size:13.5px;line-height:1.6;
+    font-family:"Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;font-variant-numeric:tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    transition:background .25s ease,color .25s ease}
+  a{color:inherit;text-decoration:none}
+  .ico{display:inline-flex;align-items:center;justify-content:center;flex:none;color:inherit}
+  .ico svg{width:100%;height:100%;display:block}
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:40px 40px;
+    -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 25%,transparent 100%);
+    mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 25%,transparent 100%)}
+  .glow{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0;opacity:.5}
+  .glow-a{width:520px;height:520px;background:var(--glow);top:-260px;left:-180px}
+  .glow-b{width:420px;height:420px;background:var(--glow);top:40px;right:-220px}
+  .wrap{position:relative;z-index:1;max-width:1380px;margin:0 auto;padding:0 28px}
+
+  /* ---------- 顶部 HUD ---------- */
+  header.hud{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;
+    padding:38px 0 22px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+  .sysline{font:500 10.5px/1.4 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.14em;color:var(--cyan);
+    display:flex;align-items:center;gap:9px;text-transform:uppercase}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--lime);
+    box-shadow:0 0 0 4px var(--lime-t);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .sep{color:var(--dim);opacity:.55}
+  h1{font-size:31px;letter-spacing:-.02em;margin:12px 0 6px;font-weight:700}
+  h1 .ver{font:500 11px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.1em;
+    color:var(--dim);margin-left:12px;vertical-align:middle}
+  .sub{color:var(--muted);margin:0;max-width:740px;font-size:12.5px;line-height:1.75}
+  .hud-right{display:flex;align-items:center;gap:16px}
+  .stamp{font:500 10px/1.7 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.08em;color:var(--dim);text-align:right}
+  .stamp b{display:block;color:var(--text);font-size:12px;letter-spacing:0;font-weight:600}
+  .tbtn{font:600 11px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.03em;cursor:pointer;
+    padding:9px 14px;border:0;border-radius:10px;
+    background:var(--panel2);color:var(--muted);display:flex;align-items:center;gap:8px;
+    transition:background .18s,color .18s}
+  .tbtn:hover{background:var(--cyan-t);color:var(--cyan)}
+  .tbtn .ico{width:14px;height:14px}
+
+  /* ---------- 统计卡：图标 + 数值，柔和填充，无边框 ---------- */
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:24px 0 14px}
+  .stat{display:flex;align-items:center;gap:12px;min-width:0;
+    background:var(--panel);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+  .stat-ico{width:34px;height:34px;border-radius:11px;flex:none;
+    display:flex;align-items:center;justify-content:center}
+  .stat-ico .ico{width:18px;height:18px}
+  .stat-ico.t-cyan{background:var(--cyan-t);color:var(--cyan)}
+  .stat-ico.t-lime{background:var(--lime-t);color:var(--lime)}
+  .stat-ico.t-violet{background:var(--violet-t);color:var(--violet)}
+  .stat-ico.t-warn{background:var(--warn-t);color:var(--warn)}
+  .stat-body{min-width:0}
+  .stat b{display:block;font:700 24px/1.15 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:-.02em}
+  .stat span{display:block;font:600 10px/1.4 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.06em;
+    color:var(--dim);margin-top:3px}
+
+  /* ---------- 同步状态条 ---------- */
+  .syncbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin:0 0 22px;padding:11px 15px;border-radius:11px;background:var(--panel2);
+    font:500 10.5px/1.7 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;color:var(--muted)}
+  .syncbar .tag{color:var(--cyan);letter-spacing:.1em;font-weight:700;
+    display:inline-flex;align-items:center;gap:7px}
+  .syncbar .tag .ico{width:14px;height:14px}
+  .syncbar .k{color:var(--text);font-weight:700}
+  .syncbar .plus{color:var(--lime)} .syncbar .minus{color:var(--warn)}
+  .syncbar .sep{color:var(--dim);opacity:.5}
+
+  /* ---------- 布局与筛选台 ---------- */
+  .layout{display:grid;grid-template-columns:264px 1fr;gap:22px;align-items:start;padding-bottom:44px}
+  aside.console{position:sticky;top:18px;max-height:calc(100vh - 36px);overflow:auto;
+    background:var(--panel);border-radius:16px;box-shadow:var(--shadow)}
+  .console-head{display:flex;justify-content:space-between;align-items:center;
+    padding:15px 18px;font:700 11px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.1em;color:var(--cyan)}
+  .console-head .blink{color:var(--lime);animation:pulse 2.4s infinite;font-size:9px}
+  .console .hint{margin:0;padding:0 18px 12px;font-size:11px;color:var(--dim);line-height:1.7}
+  #facet-root{padding:0 18px 18px}
+  .fgroup{border-top:1px solid var(--line2);padding:13px 0 5px}
+  .fgroup:first-child{border-top:0}
+  .gtitle{display:flex;align-items:center;font:700 11px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.06em;
+    color:var(--text);margin-bottom:8px}
+  .gtitle::before{content:"";width:5px;height:5px;border-radius:50%;flex:none;
+    background:var(--cyan);margin-right:8px}
+  .gtitle span{flex:1}
+  .gtitle button{border:0;background:none;color:var(--dim);font-size:10px;cursor:pointer;
+    padding:4px 6px;border-radius:6px;font-family:inherit}
+  .gtitle button:hover{background:var(--cyan-t);color:var(--cyan)}
+  .opt{display:flex;align-items:center;gap:10px;padding:5px 6px;border-radius:8px;
+    cursor:pointer;font-size:12.5px}
+  .opt:hover{background:var(--panel2)}
+  .opt input{appearance:none;-webkit-appearance:none;position:relative;flex:none;
+    width:16px;height:16px;border:0;border-radius:5px;
+    background:var(--neutral-t);cursor:pointer;margin:0;transition:background .16s}
+  .opt input:checked{background:var(--cyan)}
+  .opt input:checked::after{content:"";position:absolute;left:5px;top:2px;
+    width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .opt .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt .n{font:600 10px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;color:var(--dim)}
+
+  /* ---------- 工具栏 ---------- */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .search-wrap{flex:1;min-width:220px;display:flex;align-items:center;gap:9px;
+    padding:0 14px;background:var(--panel);border-radius:10px;box-shadow:var(--shadow)}
+  .search-wrap .ico{width:16px;height:16px;color:var(--dim)}
+  .search{flex:1;min-width:0;padding:11px 0;border:0;background:transparent;
+    color:var(--text);outline:none;font-size:13px;font-family:inherit}
+  .search::placeholder{color:var(--dim)}
+  .search-wrap:focus-within{box-shadow:0 0 0 3px var(--cyan-t),var(--shadow)}
+  select,.btn{padding:11px 14px;border:0;border-radius:10px;
+    background:var(--panel);color:var(--muted);font-size:12px;outline:none;
+    box-shadow:var(--shadow);font-family:inherit}
+  .btn{cursor:pointer;font-size:11px;font-weight:600;letter-spacing:.03em;background:var(--panel2)}
+  .btn:hover{background:var(--cyan-t);color:var(--cyan)}
+  .resultbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    margin-bottom:14px;font:500 11px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;color:var(--muted)}
+  .resultbar b{color:var(--cyan);font-size:13px}
+  .chip{background:var(--violet-t);color:var(--violet);border-radius:7px;
+    padding:4px 9px;font-size:10.5px}
+  .chip button{border:0;background:none;color:inherit;cursor:pointer;padding:0 0 0 6px;font-weight:700}
+
+  /* ---------- 项目卡片 ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .card{position:relative;background:var(--panel);border-radius:14px;padding:16px;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .ctop{display:flex;justify-content:space-between;align-items:center;
+    font:600 10px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.08em;color:var(--dim)}
+  .ctop-l{display:inline-flex;align-items:center;gap:6px}
+  .ctop-l .ico{width:14px;height:14px;color:var(--cyan)}
+  .cname{font-size:15px;font-weight:700;word-break:break-all;display:flex;
+    align-items:center;gap:6px;line-height:1.45}
+  .cname a:hover{color:var(--cyan)}
+  .ext{width:13px;height:13px;color:var(--dim);display:inline-flex;flex:none}
+  .ext svg{width:100%;height:100%;display:block}
+  .reponame{font:500 10.5px/1.4 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;color:var(--dim);word-break:break-all;margin-top:-5px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px}
+  .b{display:inline-flex;align-items:center;gap:4px;
+    font:600 10.5px/1.5 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;padding:3px 8px;border-radius:7px;
+    white-space:nowrap;background:var(--neutral-t);color:var(--muted)}
+  .b .ico{width:11px;height:11px}
+  .b-origin{background:var(--lime-t);color:var(--lime)}
+  .b-fork{background:var(--cyan-t);color:var(--cyan)}
+  .b-public{background:var(--cyan-t);color:var(--cyan)}
+  .b-private{background:var(--warn-t);color:var(--warn)}
+  .b-lang,.b-arch{background:var(--neutral-t);color:var(--muted)}
+  .b-star{background:var(--warn-t);color:var(--warn)}
+  .b-topic{background:var(--violet-t);color:var(--violet)}
+  .b-curated{background:var(--lime-t);color:var(--lime)}
+  .b-domain{background:var(--cyan-t);color:var(--cyan)}
+  .desc{font-size:12.5px;color:var(--muted);line-height:1.65;min-height:40px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .desc.empty{color:var(--dim);font-style:italic}
+  .cfoot{margin-top:auto;padding-top:4px;display:flex;justify-content:space-between;
+    font:600 10px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;color:var(--dim);letter-spacing:.04em}
+  .empty-state{grid-column:1/-1;background:var(--panel);border-radius:14px;
+    padding:48px;text-align:center;color:var(--muted);box-shadow:var(--shadow)}
+
+  /* ---------- 悬停放大详情窗 ---------- */
+  .peek{display:none;position:fixed;z-index:60;width:min(430px,calc(100vw - 24px));
+    background:var(--panel);border-radius:16px;box-shadow:var(--shadow-lg);
+    opacity:0;transform:translateY(8px);pointer-events:none;
+    max-height:calc(100vh - 24px);overflow-x:hidden;overflow-y:auto;
+    transition:opacity .16s ease,transform .16s ease}
+  .peek.show{display:block}
+  .peek.on{opacity:1;transform:translateY(0);pointer-events:auto}
+  .peek .scan{height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+    background-size:200% 100%;animation:sweep 2.2s linear infinite;opacity:.5}
+  @keyframes sweep{0%{background-position:100% 0}100%{background-position:-100% 0}}
+  .peek-in{padding:18px 20px 20px}
+  .peek-head{display:flex;justify-content:space-between;align-items:center;
+    font:700 10px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.1em;color:var(--cyan);
+    border-bottom:1px solid var(--line2);padding-bottom:10px;margin-bottom:13px}
+  .peek-head .hintx{color:var(--dim);letter-spacing:0;font-weight:500}
+  .peek h3{margin:0 0 6px;font-size:17px;word-break:break-all}
+  .peek .full{font:500 10px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;color:var(--dim);margin-bottom:12px}
+  .peek .pdesc{font-size:12.5px;color:var(--muted);line-height:1.65;
+    max-height:120px;overflow:auto;margin-bottom:13px;white-space:pre-wrap;word-break:break-word}
+  .peek .pdesc.empty{color:var(--dim);font-style:italic}
+  .peek .apidesc{font:500 10.5px/1.6 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;color:var(--dim);
+    margin:-7px 0 12px;word-break:break-word}
+  .kv{display:grid;grid-template-columns:88px 1fr;gap:6px 10px;
+    font:500 11px/1.6 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;border-top:1px solid var(--line2);padding-top:12px}
+  .kv dt{color:var(--dim)}
+  .kv dd{margin:0;color:var(--text);word-break:break-word}
+  .peek .ptopics{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+  .peek .plink{display:block;margin-top:14px;padding:10px 0;text-align:center;
+    background:var(--cyan-t);border-radius:9px;color:var(--cyan);
+    font:700 11px "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;letter-spacing:.06em}
+  .peek .plink:hover{background:var(--cyan);color:#fff}
+  .peek .plink .ico{width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-left:3px}
+
+  footer{border-top:1px solid var(--line2);padding:20px 0 44px;
+    font:500 10.5px/1.9 "Microsoft YaHei","微软雅黑","PingFang SC","Segoe UI",sans-serif;color:var(--dim)}
+  @media (max-width:900px){
+    .stats{grid-template-columns:repeat(3,1fr)}
+    .layout{grid-template-columns:1fr}
+    aside.console{position:static;max-height:none}
+  }
+  @media (max-width:560px){ .stats{grid-template-columns:repeat(2,1fr)} .wrap{padding:0 16px} }
+  @media (hover:none){ .peek{display:none!important} .desc{-webkit-line-clamp:3} }
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div><div class="glow glow-a"></div><div class="glow glow-b"></div>
+<div class="wrap">
+  <header class="hud">
+    <div>
+      <div class="sysline"><span class="dot"></span><span>SYSTEM ONLINE</span>
+        <span class="sep">/</span><span id="clock">--:--:--</span>
+        <span class="sep">/</span><span>REPO INDEX</span></div>
+      <h1>项目地图<span class="ver">REPOSITORY ATLAS</span></h1>
+      <p class="sub">全量 API 快照叠加线上公开作品集的中文策展标注。按主题、策展领域、时间、来源、可见性与技术栈交叉勾选；同维度为「或」，跨维度为「且」。悬停卡片展开完整档案。</p>
+    </div>
+    <div class="hud-right">
+      <div class="stamp">DATA SNAPSHOT<b id="stamp-time"></b></div>
+      <button class="tbtn" id="theme-toggle"><span class="ico" id="theme-ico"></span><span id="theme-label"></span></button>
+    </div>
+  </header>
+  <section class="stats" id="stats"></section>
+  <div class="syncbar" id="syncbar"></div>
+  <div class="layout">
+    <aside class="console">
+      <div class="console-head"><span>FILTER CONSOLE</span><span class="blink">●</span></div>
+      <p class="hint">勾选即时生效；视图写入地址栏，可直接分享。悬停卡片展开扩展档案。</p>
+      <div id="facet-root"></div>
+    </aside>
+    <main>
+      <div class="toolbar">
+        <label class="search-wrap"><span class="ico"></span><input class="search" id="q" placeholder="搜索仓库名、描述或标签…" autocomplete="off"></label>
+        <select id="sort">
+          <option value="pushed-desc">最近更新优先</option>
+          <option value="created-desc">创建 · 新→旧</option>
+          <option value="created-asc">创建 · 旧→新</option>
+          <option value="name-asc">名称 A→Z</option>
+          <option value="stars-desc">Star 优先</option>
+        </select>
+        <button class="btn" id="reset">清空全部</button>
+      </div>
+      <div class="resultbar" id="resultbar"></div>
+      <div class="grid" id="grid"></div>
+    </main>
+  </div>
+  <footer>
+    DATA SOURCE / GitHub REST API 全量快照 + 线上公开作品集的中文策展标注（单向只读合并，不写回）。<br>
+    静态快照由定时任务每日重建，页面本身不发起网络请求；本页含私有仓库信息，仅本机查看。
+    TOPIC / 主题标签为关键词规则推断，非权威分类；策展领域来自线上人工标注。
+    FORK · VISIBILITY · ARCHIVED · LANGUAGE · DATES 均为 API 原始字段。
+  </footer>
+</div>
+<div class="peek" id="peek" aria-hidden="true"></div>
+<script id="repo-data" type="application/json">{"items": [{"name": "zmy1006-sudo", "full": "zmy1006-sudo/zmy1006-sudo", "url": "https://github.com/zmy1006-sudo/zmy1006-sudo", "desc": "个人主页", "private": false, "fork": false, "archived": false, "created": "2026-11-07", "pushed": "2026-11-07", "updated": "2026-11-07", "lang": "未标注", "topics": ["项目索引 · 作品集站点"], "stars": 0, "ghTopics": [], "idx": 0}, {"name": "boss-agent", "full": "zmy1006-sudo/boss-agent", "url": "https://github.com/zmy1006-sudo/boss-agent", "desc": "BOSS Agent —— DeepSeek Harness 的决策中枢预设：你只提目标，它负责判断、选路、派人、验收、交付。", "private": false, "fork": false, "archived": false, "created": "2026-11-07", "pushed": "2026-11-07", "updated": "2026-11-07", "lang": "PowerShell", "topics": ["AI Agent · 开发工具"], "stars": 0, "ghTopics": ["agent-preset", "ai-agent", "deepseek", "deepseek-harness", "prompt-engineering"], "idx": 1}, {"name": "zmy1006-sudo.github.io", "full": "zmy1006-sudo/zmy1006-sudo.github.io", "url": "https://github.com/zmy1006-sudo/zmy1006-sudo.github.io", "desc": "项目分类索引：按领域/类型/自研-fork/时间勾选筛选", "private": false, "fork": false, "archived": false, "created": "2026-11-07", "pushed": "2026-11-07", "updated": "2026-11-07", "lang": "JavaScript", "topics": ["项目索引 · 作品集站点"], "stars": 0, "ghTopics": [], "idx": 2}, {"name": "awesome-dsh-plugin", "full": "zmy1006-sudo/awesome-dsh-plugin", "url": "https://github.com/zmy1006-sudo/awesome-dsh-plugin", "desc": "A curated list of plugins for DeepSeek Harness (dsh) · DeepSeek Harness 插件精选列表", "private": false, "fork": true, "archived": false, "created": "2026-11-03", "pushed": "2026-11-03", "updated": "2026-11-03", "lang": "JavaScript", "topics": ["AI Agent · 开发工具"], "stars": 0, "ghTopics": [], "idx": 3}, {"name": "dsh-project-atlas", "full": "zmy1006-sudo/dsh-project-atlas", "url": "https://github.com/zmy1006-sudo/dsh-project-atlas", "desc": "A colorful tag wall of recent projects in the DeepSeek Harness sidebar: numbered tags with type logos that unfold into date, summary, hours, cost and next steps on hover.", "private": false, "fork": false, "archived": false, "created": "2026-11-03", "pushed": "2026-11-03", "updated": "2026-11-03", "lang": "JavaScript", "topics": ["AI Agent · 开发工具"], "stars": 0, "ghTopics": ["deepseek-harness", "dsh", "dsh-plugin", "project-archive", "sidebar-panel"], "idx": 4}, {"name": "Toonflow-app", "full": "zmy1006-sudo/Toonflow-app", "url": "https://github.com/zmy1006-sudo/Toonflow-app", "desc": "短剧、漫剧制作工具 Toonflow：开源 AI 视频创作平台，集成剧本创作、智能分镜、角色与场景资产管理、图像生成和视频生成。融合无限画布、AI Agent 与可视化工作流，支持本地部署、自选模型、跨平台客户端、MCP 与插件扩展。Open-source AI short drama and motion comic creation tool with an infinite canvas, AI agents, storyboarding, image and video generation. Self-hosted and extensible, with a canvas-based approach similar to LibTV and TapNow.", "private": false, "fork": true, "archived": false, "created": "2026-10-19", "pushed": "2026-10-16", "updated": "2026-10-19", "lang": "未标注", "topics": ["AI Agent · 开发工具", "AI 视频 · 内容创作"], "stars": 0, "ghTopics": [], "idx": 5}, {"name": "OpenBioMed", "full": "zmy1006-sudo/OpenBioMed", "url": "https://github.com/zmy1006-sudo/OpenBioMed", "desc": "水木分子开源项目", "private": false, "fork": true, "archived": false, "created": "2026-09-03", "pushed": "2026-07-22", "updated": "2026-09-03", "lang": "未标注", "topics": ["医学影像 · 生物数据"], "stars": 0, "ghTopics": [], "idx": 6}, {"name": "academic-figure-generator", "full": "zmy1006-sudo/academic-figure-generator", "url": "https://github.com/zmy1006-sudo/academic-figure-generator", "desc": "AI 驱动的学术论文配图生成平台。上传论文 → AI 分析内容生成 Prompt → 一键生成高质量科研配图，还有配套的skill可在主流agent中使用", "private": false, "fork": true, "archived": false, "created": "2026-08-31", "pushed": "2026-03-27", "updated": "2026-08-31", "lang": "未标注", "topics": ["AI Agent · 开发工具", "AI 视频 · 内容创作"], "stars": 0, "ghTopics": [], "idx": 7}, {"name": "archify-zmy", "full": "zmy1006-sudo/archify-zmy", "url": "https://github.com/zmy1006-sudo/archify-zmy", "desc": "Agent skill for beautiful, verifiable architecture, workflow, sequence, data-flow, and lifecycle diagrams—self-contained HTML with motion and crisp export.", "private": false, "fork": true, "archived": false, "created": "2026-08-31", "pushed": "2026-08-31", "updated": "2026-08-31", "lang": "未标注", "topics": ["AI Agent · 开发工具", "图表 · 可视化工具"], "stars": 0, "ghTopics": [], "idx": 8}, {"name": "stock-trading-ui", "full": "zmy1006-sudo/stock-trading-ui", "url": "https://github.com/zmy1006-sudo/stock-trading-ui", "desc": "Red Wolf ?????????? - ?Agent AI????????? (PC+?????)", "private": false, "fork": false, "archived": false, "created": "2026-06-29", "pushed": "2026-06-29", "updated": "2026-06-29", "lang": "未标注", "topics": ["AI Agent · 开发工具", "金融 · 量化交易"], "stars": 0, "ghTopics": [], "idx": 9}, {"name": "hospital-fmt-followup", "full": "zmy1006-sudo/hospital-fmt-followup", "url": "https://github.com/zmy1006-sudo/hospital-fmt-followup", "desc": "医院肠菌移植随访系统 V1.2 - 医护端 + H5患者端", "private": false, "fork": false, "archived": false, "created": "2026-06-15", "pushed": "2026-06-15", "updated": "2026-06-16", "lang": "HTML", "topics": ["医疗 · FMT 随访"], "stars": 0, "ghTopics": [], "idx": 10}, {"name": "homework-hero-backend", "full": "zmy1006-sudo/homework-hero-backend", "url": "https://github.com/zmy1006-sudo/homework-hero-backend", "desc": "homework-hero 本地后端（MySQL + Express.js）", "private": false, "fork": false, "archived": false, "created": "2026-05-17", "pushed": "2026-05-17", "updated": "2026-05-17", "lang": "JavaScript", "topics": ["儿童教育 · 作业系统"], "stars": 0, "ghTopics": [], "idx": 11}, {"name": "yingzhitong", "full": "zmy1006-sudo/yingzhitong", "url": "https://github.com/zmy1006-sudo/yingzhitong", "desc": "营智通 NutriMind - CSPEN临床营养智能决策系统 v4.0 | 角色体系+闭环工作流+知识森林+DoubleAgent质量门", "private": false, "fork": false, "archived": false, "created": "2026-05-09", "pushed": "2026-05-10", "updated": "2026-05-10", "lang": "Python", "topics": ["临床营养 · 决策"], "stars": 0, "ghTopics": [], "idx": 12}, {"name": "nutrimind", "full": "zmy1006-sudo/nutrimind", "url": "https://github.com/zmy1006-sudo/nutrimind", "desc": "营智通NutriMind - CSPEN临床营养智能决策系统 | DoubleAgent质量门 | Deepseek AI", "private": false, "fork": false, "archived": false, "created": "2026-05-08", "pushed": "2026-05-08", "updated": "2026-05-08", "lang": "未标注", "topics": ["临床营养 · 决策"], "stars": 0, "ghTopics": [], "idx": 13}, {"name": "fmt-microbiota-journey", "full": "zmy1006-sudo/fmt-microbiota-journey", "url": "https://github.com/zmy1006-sudo/fmt-microbiota-journey", "desc": "FMT生命之旅 Microbiota Journey - 苏州市立医院沉浸式数字装置", "private": false, "fork": false, "archived": false, "created": "2026-05-08", "pushed": "2026-05-08", "updated": "2026-05-08", "lang": "TypeScript", "topics": ["医疗 · FMT 随访"], "stars": 0, "ghTopics": [], "idx": 14}, {"name": "Project-Imaging-X-web", "full": "zmy1006-sudo/Project-Imaging-X-web", "url": "https://github.com/zmy1006-sudo/Project-Imaging-X-web", "desc": "医学影像AI超级仓库可视化前端 · 1151+ 开源数据集一站发现", "private": false, "fork": false, "archived": false, "created": "2026-05-05", "pushed": "2026-05-05", "updated": "2026-05-05", "lang": "未标注", "topics": ["医学影像 · 生物数据"], "stars": 0, "ghTopics": [], "idx": 15}, {"name": "deepportal-mvp", "full": "zmy1006-sudo/deepportal-mvp", "url": "https://github.com/zmy1006-sudo/deepportal-mvp", "desc": "deepportal", "private": false, "fork": false, "archived": false, "created": "2026-04-24", "pushed": "2026-04-24", "updated": "2026-04-24", "lang": "未标注", "topics": ["AI Agent · 开发工具"], "stars": 0, "ghTopics": [], "idx": 16}, {"name": "iBrain", "full": "zmy1006-sudo/iBrain", "url": "https://github.com/zmy1006-sudo/iBrain", "desc": "个人外脑，协助管理个人知识库和项目库", "private": false, "fork": false, "archived": false, "created": "2026-04-12", "pushed": "2026-04-12", "updated": "2026-04-12", "lang": "TypeScript", "topics": ["知识库 · 个人外脑"], "stars": 0, "ghTopics": [], "idx": 17}, {"name": "hermes-agent", "full": "zmy1006-sudo/hermes-agent", "url": "https://github.com/zmy1006-sudo/hermes-agent", "desc": "Hermes Agent by Nous Research - Self-improving AI agent with built-in learning loop", "private": false, "fork": false, "archived": false, "created": "2026-04-10", "pushed": "2026-04-10", "updated": "2026-04-10", "lang": "Python", "topics": ["AI Agent · 开发工具"], "stars": 0, "ghTopics": [], "idx": 18}, {"name": "survey-platform", "full": "zmy1006-sudo/survey-platform", "url": "https://github.com/zmy1006-sudo/survey-platform", "desc": "飞鸽调研管理系统 - 本地存储版", "private": false, "fork": false, "archived": false, "created": "2026-04-09", "pushed": "2026-04-09", "updated": "2026-04-09", "lang": "TypeScript", "topics": ["调研 · 表单工具"], "stars": 0, "ghTopics": [], "idx": 19}, {"name": "deepfmt-xinchuang", "full": "zmy1006-sudo/deepfmt-xinchuang", "url": "https://github.com/zmy1006-sudo/deepfmt-xinchuang", "desc": "deepfmt xinchuang ", "private": false, "fork": false, "archived": false, "created": "2026-04-01", "pushed": "2026-04-01", "updated": "2026-04-01", "lang": "未标注", "topics": ["医疗 · FMT 随访"], "stars": 0, "ghTopics": [], "idx": 20}, {"name": "homework-hero-v1.8", "full": "zmy1006-sudo/homework-hero-v1.8", "url": "https://github.com/zmy1006-sudo/homework-hero-v1.8", "desc": "homework-hero V1.8 快照版本", "private": false, "fork": false, "archived": false, "created": "2026-03-30", "pushed": "2026-03-30", "updated": "2026-03-30", "lang": "TypeScript", "topics": ["儿童教育 · 作业系统"], "stars": 0, "ghTopics": [], "idx": 21}, {"name": "homework-hero-v1.7", "full": "zmy1006-sudo/homework-hero-v1.7", "url": "https://github.com/zmy1006-sudo/homework-hero-v1.7", "desc": "儿童作业闯关积分系统 V1.7（番茄钟+积分+段位+成就）", "private": false, "fork": false, "archived": false, "created": "2026-03-29", "pushed": "2026-03-29", "updated": "2026-05-20", "lang": "TypeScript", "topics": ["儿童教育 · 作业系统"], "stars": 1, "ghTopics": [], "idx": 22}, {"name": "clawx", "full": "zmy1006-sudo/clawx", "url": "https://github.com/zmy1006-sudo/clawx", "desc": "ClawX 小龙虾AI劳动力网络 - Monorepo (api+web)", "private": false, "fork": false, "archived": false, "created": "2026-03-27", "pushed": "2026-03-27", "updated": "2026-03-27", "lang": "TypeScript", "topics": ["AI Agent · 开发工具"], "stars": 0, "ghTopics": [], "idx": 23}, {"name": "deepfmt-xinchuang-backend", "full": "zmy1006-sudo/deepfmt-xinchuang-backend", "url": "https://github.com/zmy1006-sudo/deepfmt-xinchuang-backend", "desc": "DeepFMT信创版Spring Boot后端 | openGauss | SM4国密 | JWT | 通义千问", "private": false, "fork": false, "archived": false, "created": "2026-03-26", "pushed": "2026-03-26", "updated": "2026-03-26", "lang": "Java", "topics": ["医疗 · FMT 随访"], "stars": 0, "ghTopics": [], "idx": 24}, {"name": "deepfmt-xinchuang-admin", "full": "zmy1006-sudo/deepfmt-xinchuang-admin", "url": "https://github.com/zmy1006-sudo/deepfmt-xinchuang-admin", "desc": "DeepFMT信创版管理后台 | SM4国密 | openGauss | 通义千问AI | JWT认证", "private": false, "fork": false, "archived": false, "created": "2026-03-26", "pushed": "2026-03-26", "updated": "2026-03-26", "lang": "TypeScript", "topics": ["医疗 · FMT 随访"], "stars": 0, "ghTopics": [], "idx": 25}, {"name": "deepfmt-xinchuang-patient", "full": "zmy1006-sudo/deepfmt-xinchuang-patient", "url": "https://github.com/zmy1006-sudo/deepfmt-xinchuang-patient", "desc": "DeepFMT信创版患者端 | SM4国密 | openGauss | 通义千问AI | JWT认证", "private": false, "fork": false, "archived": false, "created": "2026-03-26", "pushed": "2026-03-26", "updated": "2026-03-27", "lang": "TypeScript", "topics": ["医疗 · FMT 随访"], "stars": 0, "ghTopics": [], "idx": 26}, {"name": "AICFO", "full": "zmy1006-sudo/AICFO", "url": "https://github.com/zmy1006-sudo/AICFO", "desc": "AICFO - 你的AI财税专家", "private": false, "fork": false, "archived": false, "created": "2026-03-25", "pushed": "2026-03-30", "updated": "2026-03-30", "lang": "TypeScript", "topics": ["财税 · 经营决策"], "stars": 0, "ghTopics": [], "idx": 27}, {"name": "deepcfo", "full": "zmy1006-sudo/deepcfo", "url": "https://github.com/zmy1006-sudo/deepcfo", "desc": "每个小老板都有一个深度AI CFO，\"会说话就能管财税\"", "private": false, "fork": false, "archived": false, "created": "2026-03-24", "pushed": "2026-03-24", "updated": "2026-03-24", "lang": "TypeScript", "topics": ["财税 · 经营决策"], "stars": 0, "ghTopics": [], "idx": 28}, {"name": "homework-points-system", "full": "zmy1006-sudo/homework-points-system", "url": "https://github.com/zmy1006-sudo/homework-points-system", "desc": "", "private": false, "fork": false, "archived": false, "created": "2026-03-17", "pushed": "2026-03-17", "updated": "2026-03-17", "lang": "TypeScript", "topics": ["儿童教育 · 作业系统"], "stars": 0, "ghTopics": [], "idx": 29}, {"name": "deepfmt-admin", "full": "zmy1006-sudo/deepfmt-admin", "url": "https://github.com/zmy1006-sudo/deepfmt-admin", "desc": "", "private": false, "fork": false, "archived": false, "created": "2026-03-16", "pushed": "2026-03-21", "updated": "2026-03-21", "lang": "TypeScript", "topics": ["医疗 · FMT 随访"], "stars": 0, "ghTopics": [], "idx": 30}, {"name": "deepfmt", "full": "zmy1006-sudo/deepfmt", "url": "https://github.com/zmy1006-sudo/deepfmt", "desc": "deepfmt是和苏州市里医院联合开发运营的项目", "private": false, "fork": false, "archived": false, "created": "2026-03-16", "pushed": "2026-03-16", "updated": "2026-03-16", "lang": "未标注", "topics": ["医疗 · FMT 随访"], "stars": 0, "ghTopics": [], "idx": 31}, {"name": "homework-hero", "full": "zmy1006-sudo/homework-hero", "url": "https://github.com/zmy1006-sudo/homework-hero", "desc": "", "private": false, "fork": false, "archived": false, "created": "2026-03-16", "pushed": "2026-03-30", "updated": "2026-03-30", "lang": "TypeScript", "topics": ["儿童教育 · 作业系统"], "stars": 0, "ghTopics": [], "idx": 32}], "mode": "public", "generated": "2026-11-07 22:28"}</script>
+<script>
+(function(){
+  'use strict';
+  var DATA = JSON.parse(document.getElementById('repo-data').textContent);
+  var ITEMS = DATA.items;
+  /* ---------- 图标：24x24 网格、1.7 描边、圆角端点（无外框） ---------- */
+  var SVG = {
+    layers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>',
+    box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+    branch:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
+    globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/></svg>',
+    lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+    activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+    folder:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
+    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+    external:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>',
+    sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
+    sync:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7L20 8"/><path d="M20 3v5h-5"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>',
+    star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 3 6.5 7 .9-5 4.8 1.2 7L12 17.8 5.8 21.2 7 14.2 2 9.4l7-.9L12 2Z"/></svg>',
+    archive:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg>'
+  };
+  function ico(k){ return '<span class="ico">'+SVG[k]+'</span>'; }
+  var DEFAULT_THEME = 'light';   // 改为 'dark' 可让深色模式成为默认
+
+  /* ---------- 主题 ---------- */
+  var saved;
+  try{ saved = localStorage.getItem('wb-portfolio-theme'); }catch(e){}
+  function applyTheme(v){
+    document.documentElement.setAttribute('data-theme',v);
+    document.getElementById('theme-label').textContent = v === 'dark' ? '明亮模式' : '深色模式';
+    var ti = document.getElementById('theme-ico');
+    if(ti) ti.innerHTML = SVG[v === 'dark' ? 'sun' : 'moon'];
+    try{ localStorage.setItem('wb-portfolio-theme',v); }catch(e){}
+  }
+  applyTheme(saved || DEFAULT_THEME);
+  document.getElementById('theme-toggle').addEventListener('click',function(){
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+  function tick(){ document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8); }
+  tick(); setInterval(tick,1000);
+  document.getElementById('stamp-time').textContent = DATA.generated;
+
+  /* ---------- 维度 ---------- */
+  var DIMS = [
+    {key:'topic',      title:'主题分类', vals:function(i){return i.topics;}},
+    {key:'domain',     title:'策展领域', vals:function(i){return i.domains || ['仅 API 快照'];}},
+    {key:'year',       title:'创建年份', vals:function(i){return [i.created.slice(0,4)];}},
+    {key:'origin',     title:'项目来源', vals:function(i){return [i.fork?'Fork':'自主研发'];}},
+    {key:'visibility', title:'可见性',   vals:function(i){return [i.private?'私有':'公开'];}},
+    {key:'status',     title:'状态',     vals:function(i){return [i.archived?'已归档':'活跃'];}},
+    {key:'lang',       title:'主要语言', vals:function(i){return [i.lang];}}
+  ];
+  // 发布版不含私有字段与人工标注，隐藏对应维度
+  if(DATA.mode === 'public') DIMS = DIMS.filter(function(d){
+    return d.key !== 'visibility' && d.key !== 'domain';
+  });
+
+  var state = {groups:{},q:'',sort:'pushed-desc'};
+  DIMS.forEach(function(d){ state.groups[d.key] = new Set(); });
+  try{
+    var hp = new URLSearchParams(location.hash.slice(1));
+    DIMS.forEach(function(d){
+      (hp.get(d.key)||'').split(',').filter(Boolean).forEach(function(v){state.groups[d.key].add(v);});
+    });
+    state.q = hp.get('q')||''; state.sort = hp.get('sort')||state.sort;
+  }catch(e){}
+
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function uniqCounts(d){
+    var m = new Map();
+    ITEMS.forEach(function(i){ d.vals(i).forEach(function(v){ m.set(v,(m.get(v)||0)+1); }); });
+    return Array.from(m.entries()).sort(function(a,b){
+      if(d.key==='year'||d.key==='lang') return b[0].localeCompare(a[0]);
+      return b[1]-a[1] || a[0].localeCompare(b[0],'zh');
+    });
+  }
+
+  function buildFacets(){
+    var root = document.getElementById('facet-root');
+    root.innerHTML = DIMS.map(function(d){
+      var opts = uniqCounts(d).map(function(p){
+        var ck = state.groups[d.key].has(p[0]) ? ' checked' : '';
+        return '<label class="opt"><input type="checkbox" data-dim="'+d.key+'" value="'+esc(p[0])+'"'+ck+'>'+
+               '<span class="lb">'+esc(p[0])+'</span><span class="n">'+p[1]+'</span></label>';
+      }).join('');
+      return '<div class="fgroup"><div class="gtitle"><span>'+d.title+'</span>'+
+             '<button data-clear="'+d.key+'">清空</button></div>'+opts+'</div>';
+    }).join('');
+    root.querySelectorAll('input[type=checkbox]').forEach(function(el){
+      el.addEventListener('change',function(){
+        var s = state.groups[el.dataset.dim];
+        if(el.checked) s.add(el.value); else s.delete(el.value);
+        render();
+      });
+    });
+    root.querySelectorAll('[data-clear]').forEach(function(el){
+      el.addEventListener('click',function(){ state.groups[el.dataset.clear].clear(); buildFacets(); render(); });
+    });
+  }
+
+  function matches(i){
+    for(var k=0;k<DIMS.length;k++){
+      var d = DIMS[k], sel = state.groups[d.key];
+      if(sel && sel.size && !d.vals(i).some(function(v){return sel.has(v);})) return false;
+    }
+    if(state.q){
+      var q = state.q.toLowerCase();
+      var c = i.curated || {};
+      var hay = (i.name+' '+i.desc+' '+i.topics.join(' ')+' '+
+                 (i.ghTopics||[]).join(' ')+' '+i.lang+' '+
+                 (c.title||'')+' '+(c.summary||'')+' '+(i.domains||[]).join(' ')).toLowerCase();
+      if(hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  }
+
+  var SORTERS = {
+    'pushed-desc':function(a,b){return b.pushed.localeCompare(a.pushed)||a.name.localeCompare(b.name);},
+    'created-desc':function(a,b){return b.created.localeCompare(a.created);},
+    'created-asc':function(a,b){return a.created.localeCompare(b.created);},
+    'name-asc':function(a,b){return a.name.localeCompare(b.name,'zh');},
+    'stars-desc':function(a,b){return b.stars-a.stars||b.pushed.localeCompare(a.pushed);}
+  };
+
+  function badges(i){
+    var s = '';
+    s += i.fork ? '<span class="b b-fork">'+ico('branch')+'Fork</span>'
+                : '<span class="b b-origin">'+ico('check')+'自研</span>';
+    s += i.private ? '<span class="b b-private">'+ico('lock')+'私有</span>'
+                   : '<span class="b b-public">'+ico('globe')+'公开</span>';
+    if(i.archived) s += '<span class="b b-arch">'+ico('archive')+'已归档</span>';
+    if(i.stars>0) s += '<span class="b b-star">'+ico('star')+i.stars+'</span>';
+    if(i.curated) s += '<span class="b b-curated">'+ico('check')+'已策展</span>';
+    i.topics.forEach(function(t){ s += '<span class="b b-topic">'+esc(t)+'</span>'; });
+    return s;
+  }
+  function rid(i){ return 'R-'+String(i.idx+1).padStart(3,'0'); }
+  function card(i){
+    var c = i.curated || {};
+    var title = c.title || i.name;
+    var body = c.summary || i.desc;
+    var link = i.private
+      ? '<span>'+esc(title)+'</span>'
+      : '<a href="'+esc(i.url)+'" target="_blank" rel="noopener">'+esc(title)+'</a>'+
+        '<span class="ext">'+SVG.external+'</span>';
+    var sub = c.title ? '<div class="reponame">'+esc(i.name)+'</div>' : '';
+    var desc = body ? '<div class="desc">'+esc(body)+'</div>'
+                    : '<div class="desc empty">该项目未填写描述</div>';
+    return '<article class="card" data-idx="'+i.idx+'">'+
+      '<div class="ctop"><span class="ctop-l">'+ico('folder')+rid(i)+'</span>'+
+        '<span>'+esc(i.created)+'</span></div>'+
+      '<div class="cname">'+link+'</div>'+sub+
+      '<div class="badges">'+badges(i)+'<span class="b b-lang">'+esc(i.lang)+'</span></div>'+
+      desc+
+      '<div class="cfoot"><span>CREATED '+esc(i.created)+'</span><span>PUSHED '+esc(i.pushed)+'</span></div>'+
+    '</article>';
+  }
+
+  /* ---------- 悬停放大详情窗 ---------- */
+  var peek = document.getElementById('peek'), grid = document.getElementById('grid');
+  var hideTimer = null, closeTimer = null, activeCard = null;
+  var hasHover = window.matchMedia('(hover: hover)').matches;
+
+  function staleDays(i){
+    var t = Date.parse(i.pushed+'T00:00:00Z');
+    return isNaN(t) ? '—' : Math.max(0,Math.floor((Date.now()-t)/864e5))+' 天';
+  }
+  function peekHTML(i){
+    var c = i.curated || {};
+    var rows = [
+      ['可见性', i.private?'私有 PRIVATE':'公开 PUBLIC'],
+      ['项目来源', i.fork?'Fork 派生':'自主研发 ORIGINAL'],
+      ['运行状态', (i.archived?'已归档':'活跃')+' · 沉寂 '+staleDays(i)],
+      ['主要语言', i.lang],
+      ['STAR', String(i.stars)],
+      ['创建时间', i.created],
+      ['最近推送', i.pushed],
+      ['元数据更新', i.updated],
+      ['仓库路径', i.full],
+      ['策展标注', c.title ? '已合并 · 线上人工维护' : '无 · 仅 API 快照'],
+      ['中文名称', c.title || '—'],
+      ['策展领域', (i.domains||[]).length ? i.domains.join(' / ') : '仅 API 快照'],
+      ['项目类型', (c.kinds||[]).length ? c.kinds.join(' / ') : '—'],
+      ['策展状态', c.curatedStatus || '—'],
+      ['GitHub topics', (i.ghTopics||[]).length ? i.ghTopics.join(' / ') : '未设置'],
+      ['推断主题', i.topics.join(' / ')]
+    ];
+    var kv = rows.map(function(r){
+      return '<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>';
+    }).join('');
+    var tags = i.topics.map(function(t){return '<span class="b b-topic">'+esc(t)+'</span>';}).join('');
+    var body = c.summary || i.desc;
+    var apiLine = (c.summary && i.desc && i.desc !== c.summary)
+      ? '<div class="apidesc">API DESC / '+esc(i.desc)+'</div>' : '';
+    var linkBlock = i.private
+      ? '<div class="plink" style="opacity:.55;cursor:default">私有仓库 · 本机档案</div>'
+      : '<a class="plink" href="'+esc(i.url)+'" target="_blank" rel="noopener">打开仓库'+
+        ico('external')+'</a>';
+    return '<div class="scan"></div><div class="peek-in">'+
+      '<div class="peek-head"><span>EXPANDED VIEW // '+rid(i)+'</span>'+
+        '<span class="hintx">移开鼠标关闭</span></div>'+
+      '<h3>'+esc(c.title || i.name)+'</h3>'+
+      '<div class="full">'+esc(i.full)+'</div>'+
+      (body ? '<div class="pdesc">'+esc(body)+'</div>'
+            : '<div class="pdesc empty">该项目未填写描述</div>')+
+      apiLine+
+      '<dl class="kv">'+kv+'</dl>'+
+      '<div class="ptopics">'+tags+'</div>'+
+      linkBlock+
+    '</div>';
+  }
+  function placePeek(el){
+    var r = el.getBoundingClientRect();
+    var w = peek.offsetWidth, h = peek.offsetHeight;
+    var x = r.right + 16;
+    if(x + w > window.innerWidth - 12) x = r.left - w - 16;
+    if(x < 12) x = Math.min(Math.max(12, r.left + r.width/2 - w/2), window.innerWidth - w - 12);
+    var y = Math.max(12, Math.min(r.top - 8, window.innerHeight - h - 12));
+    peek.style.left = x+'px'; peek.style.top = y+'px';
+  }
+  function showPeek(i, el){
+    clearTimeout(hideTimer); clearTimeout(closeTimer);
+    peek.innerHTML = peekHTML(i);
+    peek.classList.add('show');
+    placePeek(el);
+    requestAnimationFrame(function(){ peek.classList.add('on'); });
+  }
+  function hidePeek(){
+    hideTimer = setTimeout(function(){
+      peek.classList.remove('on');
+      closeTimer = setTimeout(function(){
+        if(!peek.classList.contains('on')) peek.classList.remove('show');
+      },180);
+    },220);
+  }
+  if(hasHover){
+    peek.addEventListener('mouseenter',function(){ clearTimeout(hideTimer); clearTimeout(closeTimer); });
+    peek.addEventListener('mouseleave',hidePeek);
+    grid.addEventListener('mouseover',function(e){
+      var c = e.target.closest ? e.target.closest('.card') : null;
+      if(!c || c === activeCard) return;
+      activeCard = c;
+      var i = ITEMS[parseInt(c.dataset.idx,10)];
+      if(i) showPeek(i,c);
+    });
+    grid.addEventListener('mouseout',function(e){
+      var c = e.target.closest ? e.target.closest('.card') : null;
+      if(!c) return;
+      if(e.relatedTarget && c.contains(e.relatedTarget)) return;
+      activeCard = null; hidePeek();
+    });
+  }
+
+  /* ---------- 渲染 ---------- */
+  function stats(){
+    var n = ITEMS.length;
+    var own = ITEMS.filter(function(i){return !i.fork;}).length;
+    var pub = ITEMS.filter(function(i){return !i.private;}).length;
+    var arc = ITEMS.filter(function(i){return i.archived;}).length;
+    var cutoff = new Date(Date.now()-365*864e5).toISOString().slice(0,10);
+    var recent = ITEMS.filter(function(i){return i.pushed >= cutoff;}).length;
+    var cells = [
+      [n,'总数','layers','t-cyan'], [own,'自主研发','box','t-lime'],
+      [n-own,'Fork 派生','branch','t-violet'], [pub,'公开仓库','globe','t-cyan'],
+      [n-pub,'私有仓库','lock','t-warn'], [recent,'近一年活跃','activity','t-lime']
+    ];
+    if(DATA.mode === 'public') cells[4] = [arc,'已归档','archive','t-warn'];
+    document.getElementById('stats').innerHTML = cells.map(function(c){
+      return '<div class="stat"><div class="stat-ico '+c[3]+'">'+ico(c[2])+'</div>'+
+             '<div class="stat-body"><b>'+c[0]+'</b><span>'+c[1]+'</span></div></div>';
+    }).join('');
+  }
+
+  function syncbar(){
+    var el = document.getElementById('syncbar');
+    if(DATA.mode === 'public'){
+      el.innerHTML = '<span class="tag">'+ico('globe')+'PUBLIC SNAPSHOT</span>'+
+        '<span>仅公开仓库 · 不含私有字段与人工标注 · 快照由定时任务重建</span>';
+      return;
+    }
+    var c = DATA.curation || {}, d = DATA.delta || {}, p = [];
+    p.push('<span class="tag">'+ico('sync')+'DUAL-TRACK SYNC</span>');
+    if(c.loaded){
+      p.push('<span>策展合并 <span class="k">'+c.matched+'</span> / '+c.total+
+             ' 项（线上公开作品集只读）</span>');
+      p.push('<span class="sep">│</span><span>未策展 <span class="k">'+
+             Math.max(0,ITEMS.length-c.matched)+'</span> 项</span>');
+    }else{
+      p.push('<span class="minus">线上策展数据未加载 · 本次仅 API 快照</span>');
+    }
+    p.push('<span class="sep">│</span>');
+    if(d.first){
+      p.push('<span>首次快照</span>');
+    }else{
+      p.push('<span>较上次 <span class="plus">+'+d.addedCount+' 新增</span> · '+
+             '<span class="k">~'+d.changedCount+' 变更</span> · '+
+             '<span class="minus">-'+d.removedCount+' 移除</span></span>');
+      if(d.added && d.added.length){
+        p.push('<span class="sep">│</span><span>NEW / '+esc(d.added.slice(0,4).join(' · '))+
+               (d.addedCount>4?' …':'')+'</span>');
+      }
+    }
+    el.innerHTML = p.join('');
+  }
+
+  function render(){
+    var hits = ITEMS.filter(matches).sort(SORTERS[state.sort]||SORTERS['pushed-desc']);
+    activeCard = null;
+    clearTimeout(hideTimer); clearTimeout(closeTimer);
+    peek.classList.remove('on'); peek.classList.remove('show');
+    grid.innerHTML = hits.length ? hits.map(card).join('')
+      : '<div class="empty-state">当前条件下没有匹配的项目，试试减少勾选项或清空搜索词。</div>';
+    var chips = [];
+    DIMS.forEach(function(d){
+      state.groups[d.key].forEach(function(v){
+        chips.push('<span class="chip">'+esc(d.title)+'：'+esc(v)+
+          '<button data-rm="'+esc(d.key)+'" data-v="'+esc(v)+'">×</button></span>');
+      });
+    });
+    if(state.q) chips.push('<span class="chip">搜索：'+esc(state.q)+'</span>');
+    document.getElementById('resultbar').innerHTML =
+      '<span>MATCH <b>'+hits.length+'</b> / '+ITEMS.length+'</span>'+chips.join('')+
+      (chips.length?'<button class="btn" id="clear-chips" style="padding:3px 9px">清空条件</button>':'');
+    document.querySelectorAll('[data-rm]').forEach(function(el){
+      el.addEventListener('click',function(){
+        state.groups[el.dataset.rm].delete(el.dataset.v); buildFacets(); render();
+      });
+    });
+    var cc = document.getElementById('clear-chips');
+    if(cc) cc.addEventListener('click',resetAll);
+    try{
+      var p = new URLSearchParams();
+      DIMS.forEach(function(d){
+        var a = Array.from(state.groups[d.key]);
+        if(a.length) p.set(d.key,a.join(','));
+      });
+      if(state.q) p.set('q',state.q);
+      if(state.sort !== 'pushed-desc') p.set('sort',state.sort);
+      history.replaceState(null,'','#'+p.toString());
+    }catch(e){}
+  }
+  function resetAll(){
+    DIMS.forEach(function(d){ state.groups[d.key].clear(); });
+    state.q=''; state.sort='pushed-desc';
+    document.getElementById('q').value='';
+    document.getElementById('sort').value='pushed-desc';
+    buildFacets(); render();
+  }
+
+  if(DATA.mode === 'public'){
+    document.querySelector('footer').insertAdjacentHTML('afterbegin',
+      'MODE / PUBLIC SNAPSHOT · 仅包含公开仓库，快照由定时任务每日重建。<br>');
+  }
+  document.getElementById('q').value = state.q;
+  document.getElementById('sort').value = state.sort;
+  document.getElementById('q').addEventListener('input',function(e){ state.q=e.target.value.trim(); render(); });
+  document.getElementById('sort').addEventListener('change',function(e){ state.sort=e.target.value; render(); });
+  document.getElementById('reset').addEventListener('click',resetAll);
+  var si = document.querySelector('.search-wrap .ico');
+  if(si) si.innerHTML = SVG.search;
+  stats(); syncbar(); buildFacets(); render();
+})();
+</script>
+</body>
+</html>
