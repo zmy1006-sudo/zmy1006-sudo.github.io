@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mingyuan 的项目 · 分类筛选</title>
+<meta name="description" content="按领域、类型、来源、时间、可见性自由组合筛选的项目清单。">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂️</text></svg>">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">明</div>
+    <div class="brand-text">
+      <h1>mingyuan 的项目</h1>
+      <p class="sub" id="subtitle">正在加载…</p>
+    </div>
+  </div>
+  <div class="tools">
+    <label class="search">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z"/></svg>
+      <input id="q" type="search" placeholder="搜索项目名、描述、语言…" autocomplete="off" aria-label="搜索项目">
+    </label>
+    <button id="theme" class="ghost" type="button" aria-label="切换深浅色">🌙 深色</button>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="panel" id="filters">
+    <div class="panel-head">
+      <span>筛选</span>
+      <button id="reset" class="link" type="button">清空</button>
+    </div>
+    <div id="groups"></div>
+    <p class="hint">同一组内多选为「或」，不同组之间为「且」。</p>
+  </aside>
+
+  <section class="content">
+    <div class="bar">
+      <p class="count" id="count">—</p>
+      <div class="bar-tools">
+        <label class="sel">排序
+          <select id="sort">
+            <option value="pushed">最近更新</option>
+            <option value="created">最早创建</option>
+            <option value="hours">投入工时</option>
+            <option value="name">名称</option>
+          </select>
+        </label>
+        <label class="sel">分组
+          <select id="group">
+            <option value="none">不分组</option>
+            <option value="domain">按领域</option>
+            <option value="quarter">按季度</option>
+            <option value="visibility">按可见性</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div id="list" class="list"></div>
+    <div id="empty" class="empty" hidden>
+      <p>没有符合条件的项目。</p>
+      <button class="ghost" type="button" onclick="document.getElementById('reset').click()">清空筛选</button>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span id="stamp"></span>
+  <span>数据从 GitHub 账号同步生成，勾选筛选全部在浏览器本地完成，没有后端。</span>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
